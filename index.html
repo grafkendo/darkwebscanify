@@ -101,7 +101,7 @@
                             </div>
                         `;
                         
-                        // Helper functions for formatting
+                        // Helper function for formatting dates
                         const formatBreachDate = (dateString) => {
                             if (!dateString) return 'Unknown date';
                             const date = new Date(dateString);
@@ -115,18 +115,10 @@
                             });
                         };
                         
-                        const getLogoUrl = (breach) => {
-                            if (breach.LogoPath && breach.LogoPath.startsWith('http')) {
-                                return breach.LogoPath;
-                            }
-                            return `https://via.placeholder.com/150x60/e74c3c/ffffff?text=${encodeURIComponent(breach.Name)}`;
-                        };
-                        
                         // Display breaches (up to 5)
                         const displayLimit = Math.min(5, data.length);
                         data.slice(0, displayLimit).forEach(breach => {
                             const breachDate = formatBreachDate(breach.BreachDate);
-                            const logoUrl = getLogoUrl(breach);
                             const description = breach.Description || 'No description available';
                             
                             // Format data classes
@@ -140,12 +132,9 @@
                             }
                             dataClassesHtml += '</div>';
                             
-                            // Create breach item HTML
+                            // Create breach item HTML (without images)
                             resultsHtml += `
                                 <div class="breach-item">
-                                    <div class="breach-logo">
-                                        <img src="${logoUrl}" alt="${breach.Name} logo" onerror="this.src='https://via.placeholder.com/150x60/e74c3c/ffffff?text=${encodeURIComponent(breach.Name)}'">
-                                    </div>
                                     <div class="breach-details">
                                         <h4>${breach.Name}</h4>
                                         <div class="breach-meta">Breach date: ${breachDate}</div>
