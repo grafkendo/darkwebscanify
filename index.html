@@ -3,31 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Web Scan | Identity IQ</title>
+    <title>Dark Web Scan</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
+        <header>
+            <h1>Dark Web Scan</h1>
+            <p class="subtitle">Check if your email has been compromised in data breaches</p>
+        </header>
+
         <div class="scan-container">
-            <div class="scan-header">
-                <h1>Dark Web Scan</h1>
-                <p>Check if your email has been exposed in data breaches</p>
-            </div>
-            
             <div class="scan-form">
-                <input type="email" id="email-input" placeholder="Enter your email address" required>
-                <button id="scan-button">Scan Now</button>
+                <h2>Enter your email to scan</h2>
+                <p>We'll check if your email appears in known data breaches.</p>
+                
+                <div class="input-group">
+                    <input type="email" id="email-input" placeholder="Enter your email address" required>
+                    <button id="scan-button">Scan Now</button>
+                </div>
+                
+                <p class="privacy-note">Your email is only used to check against known breaches and is not stored.</p>
             </div>
             
-            <div id="loading-indicator" class="loading-indicator hidden">
+            <div id="loading-indicator" class="hidden">
                 <div class="spinner"></div>
                 <p>Scanning the dark web for your information...</p>
             </div>
             
-            <div id="scan-results" class="scan-results"></div>
+            <div id="scan-results" class="hidden"></div>
         </div>
+        
+        <footer>
+            <p>Powered by <a href="https://haveibeenpwned.com" target="_blank">Have I Been Pwned</a></p>
+            <p class="disclaimer">This tool checks your email against known data breaches. A clean result doesn't guarantee your data hasn't been compromised elsewhere.</p>
+        </footer>
     </div>
-    
-    <script src="script.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.getElementById('email-input');
+            const scanButton = document.getElementById('scan-button');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const scanResults = document.getElementById('scan-results');
+            
+            scanButton.addEventListener('click', function() {
+                // Get and validate email
+                const email = emailInput.value.trim();
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    scanResults.innerHTML = '<div class="error-message">Please enter a valid email address</div>';
+                    scanResults.classList.remove('hidden');
+                    return;
+                }
+                
+                // Show loading indicator
+                scanResults.classList.add('hidden');
+                loadingIndicator.classList.remove('hidden');
+                
+                // Call the API
+                fetch('/.netlify/functions/hibp-check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Hide loading indicator
+                    loadingIndicator.classList.add('hidden');
+                    scanResults.classList.remove('hidden');
+                    
+                    // Process results
+                    if (Array.isArray(data) && data.length === 0) {
+                        // No breaches found
+                        scanResults.innerHTML = `
+                            <div class="result-good">
+                                <h3>Great News!</h3>
+                                <p>We couldn't find your email address in any of the data breaches we checked. This is a good sign, but remember to always maintain good security practices.</p>
+                            </div>
+                            <div class="source-note">
+                                Data provided by <a href="https://haveibeenpwned.com" target="_blank">Have I Been Pwned</a>
+                            </div>
+                        `;
+                    } else {
+                        // Breaches found
+                        const breachCount = data.length;
+                        let resultsHtml = `
+                            <div class="result-bad">
+                                <h3>Your Email Was Found in ${breachCount} Data ${breachCount === 1 ? 'Breach' : 'Breaches'}</h3>
+                                <p>Your email address appears in the following data ${breachCount === 1 ? 'breach' : 'breaches'}. This means your information may be at risk.</p>
+                            </div>
+                        `;
+                        
+                        // Helper functions for formatting
+                        const formatBreachDate = (dateString) => {
+                            if (!dateString) return 'Unknown date';
+                            const date = new Date(dateString);
+                            if (isNaN(date.getTime())) {
+                                return dateString;
+                            }
+                            return date.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                        };
+                        
+                        const getLogoUrl = (breach) => {
+                            if (breach.LogoPath && breach.LogoPath.startsWith('http')) {
+                                return breach.LogoPath;
+                            }
+                            return `https://via.placeholder.com/150x60/e74c3c/ffffff?text=${encodeURIComponent(breach.Name)}`;
+                        };
+                        
+                        // Display breaches (up to 5)
+                        const displayLimit = Math.min(5, data.length);
+                        data.slice(0, displayLimit).forEach(breach => {
+                            const breachDate = formatBreachDate(breach.BreachDate);
+                            const logoUrl = getLogoUrl(breach);
+                            const description = breach.Description || 'No description available';
+                            
+                            // Format data classes
+                            let dataClassesHtml = '<div class="data-classes">';
+                            if (breach.DataClasses && breach.DataClasses.length) {
+                                breach.DataClasses.forEach(dataClass => {
+                                    dataClassesHtml += `<span class="data-class">${dataClass}</span>`;
+                                });
+                            } else {
+                                dataClassesHtml += '<span class="data-class">Unknown data types</span>';
+                            }
+                            dataClassesHtml += '</div>';
+                            
+                            // Create breach item HTML
+                            resultsHtml += `
+                                <div class="breach-item">
+                                    <div class="breach-logo">
+                                        <img src="${logoUrl}" alt="${breach.Name} logo" onerror="this.src='https://via.placeholder.com/150x60/e74c3c/ffffff?text=${encodeURIComponent(breach.Name)}'">
+                                    </div>
+                                    <div class="breach-details">
+                                        <h4>${breach.Name}</h4>
+                                        <div class="breach-meta">Breach date: ${breachDate}</div>
+                                        <p>${description}</p>
+                                        <p><strong>Compromised data:</strong></p>
+                                        ${dataClassesHtml}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        // Show message if there are more breaches
+                        if (data.length > displayLimit) {
+                            resultsHtml += `
+                                <div class="more-breaches">
+                                    <p>+ ${data.length - displayLimit} more breaches not shown</p>
+                                </div>
+                            `;
+                        }
+                        
+                        // Add "What should you do?" section
+                        resultsHtml += `
+                            <div class="what-to-do">
+                                <h3>What Should You Do?</h3>
+                                <ul>
+                                    <li><strong>Change your passwords</strong> for the affected services immediately</li>
+                                    <li><strong>Use unique passwords</strong> for each website or service</li>
+                                    <li><strong>Enable two-factor authentication</strong> where available</li>
+                                    <li><strong>Monitor your accounts</strong> for suspicious activity</li>
+                                    <li><strong>Consider using a password manager</strong> to generate and store strong passwords</li>
+                                </ul>
+                            </div>
+                            <div class="source-note">
+                                Data provided by <a href="https://haveibeenpwned.com" target="_blank">Have I Been Pwned</a>
+                            </div>
+                        `;
+                        
+                        scanResults.innerHTML = resultsHtml;
+                    }
+                })
+                .catch(error => {
+                    // Hide loading indicator and show error
+                    loadingIndicator.classList.add('hidden');
+                    scanResults.classList.remove('hidden');
+                    
+                    console.error('Error:', error);
+                    scanResults.innerHTML = `
+                        <div class="error-message">
+                            <h3>Error</h3>
+                            <p>Sorry, we encountered a problem while checking for breaches. Please try again later.</p>
+                            <p class="error-details">${error.message}</p>
+                        </div>
+                    `;
+                });
+            });
+        });
+    </script>
 </body>
 </html>
