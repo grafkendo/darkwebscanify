@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadingIndicator.classList.remove('hidden');
         
         // Call the hibp-check function at the roo
-        fetch('/.netlify/hibp-check', {
+        fetch('/.netlify/functions/hibp-check', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
