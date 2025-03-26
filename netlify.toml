@@ -1,29 +1,8 @@
-[build]
-  functions = "functions"
+   [build]
+     publish = "."
+     functions = "netlify/functions"
 
-[[redirects]]
-  from = "/api/scan"
-  to = "/.netlify/functions/api"
-  status = 200
-  
-  # Allow CORS for external sites to access your API
-  [redirects.headers]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Origin, X-Requested-With, Content-Type, Accept"
-
-[[redirects]]
-  from = "/api/hibp-check"
-  to = "/.netlify/functions/hibp-check"
-  status = 200
-  
-  # Allow CORS for external sites to access your API
-  [redirects.headers]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Origin, X-Requested-With, Content-Type, Accept"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200 
+   [[redirects]]
+     from = "."
+     to = "."
+     status = 200
