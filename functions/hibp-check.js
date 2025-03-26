@@ -17,7 +17,7 @@ exports.handler = async function(event) {
     };
   }
 
-  // Only allow POST requests
+  // Only allow POST requests foo
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
