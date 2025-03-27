@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-exports.handler = async function(event) {
+exports.handler = async function(event, context) {
   // Set CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*', // Replace with your Webflow domain in production
