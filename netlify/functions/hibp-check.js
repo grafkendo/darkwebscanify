@@ -5,19 +5,16 @@ const HIBP_API_URL = 'https://haveibeenpwned.com/api/v3';
 const HIBP_API_KEY = process.env.HIBP_API_KEY; // Set this in Netlify environment variables
 
 exports.handler = async function(event, context) {
-  // Set CORS headers
-  const headers = {
-    'Access-Control-Allow-Origin': 'https://darkscantest.design.webflow.com',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-  };
-
   // Handle preflight OPTIONS request
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
-      headers,
-      body: ''
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+      },
+      body: ""
     };
   }
 
@@ -25,7 +22,10 @@ exports.handler = async function(event, context) {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ error: 'Method Not Allowed' })
     };
   }
@@ -38,7 +38,10 @@ exports.handler = async function(event, context) {
     if (!email) {
       return {
         statusCode: 400,
-        headers,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({ error: 'Email is required' })
       };
     }
@@ -48,7 +51,10 @@ exports.handler = async function(event, context) {
     
     return {
       statusCode: 200,
-      headers,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(breaches)
     };
   } catch (error) {
@@ -57,7 +63,10 @@ exports.handler = async function(event, context) {
     // Return appropriate error response
     return {
       statusCode: error.statusCode || 500,
-      headers,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ 
         error: 'Error checking for breaches',
         message: error.message
