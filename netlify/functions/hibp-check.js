@@ -7,7 +7,7 @@ const HIBP_API_KEY = process.env.HIBP_API_KEY; // Set this in Netlify environmen
 exports.handler = async function(event, context) {
   // Set CORS headers
   const headers = {
-    'Access-Control-Allow-Origin': '*', // Replace with your Webflow domain in production
+    'Access-Control-Allow-Origin': 'https://darkscantest.design.webflow.com',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json'
   };
